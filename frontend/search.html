@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pesquisar vagas Gupy</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/search.js" defer></script>
+  </head>
+  <body>
+    <main class="app-shell search-shell">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Rotina de pesquisa</p>
+            <h1>Pesquisar vagas no Gupy</h1>
+          </div>
+          <a class="ghost-link" href="/">Voltar ao avaliador</a>
+        </div>
+
+        <form id="search-form" class="search-form">
+          <label class="field">
+            <span>Termo</span>
+            <input id="term-input" name="term" type="text" value="product owner" placeholder="Ex.: analista de negócio" />
+          </label>
+          <label class="field">
+            <span>Modelo</span>
+            <select id="workplace-input" name="workplace_types">
+              <option value="remote">Remoto</option>
+              <option value="hybrid">Híbrido</option>
+              <option value="on-site">Presencial</option>
+            </select>
+          </label>
+          <div class="actions">
+            <button type="submit">Buscar vagas</button>
+            <button type="button" id="loop-button" class="secondary">Iniciar loop</button>
+          </div>
+        </form>
+
+        <div id="status-message" class="status-message">Informe um termo e busque vagas para iniciar.</div>
+        <div id="results" class="results-list"></div>
+      </section>
+    </main>
+  </body>
+</html>

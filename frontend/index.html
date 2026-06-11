@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gupy Job Evaluator</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Avaliação de vagas · Pitch automático</p>
+          <h1>Gupy Job Evaluator &amp; Trajectory Generator</h1>
+          <p class="hero-copy">
+            Compare a vaga do Gupy com seu currículo, valide critérios de exclusão e gere um pitch personalizado para candidatura.
+          </p>
+        </div>
+      </header>
+
+      <main class="dashboard-grid">
+        <section class="panel form-panel">
+          <h2>Dados da candidatura</h2>
+          <form id="evaluate-form" class="stack">
+            <label class="field">
+              <span>URL da vaga no Gupy</span>
+              <input id="url-input" name="url" type="url" placeholder="https://gupy.io/..." required />
+            </label>
+
+            <label class="field upload-card" id="upload-card">
+              <span>Currículo (PDF ou TXT)</span>
+              <input id="resume-input" name="resume" type="file" accept=".pdf,.txt" />
+              <small>Arraste e solte ou clique para selecionar</small>
+            </label>
+
+            <label class="field">
+              <span>Texto do currículo (opcional)</span>
+              <textarea id="resume-text" name="resume_text" rows="6" placeholder="Cole o conteúdo do currículo caso não queira enviar um arquivo"></textarea>
+            </label>
+
+            <div class="grid-2">
+              <label class="field">
+                <span>Itens excludentes</span>
+                <textarea id="exclusions-input" name="exclusions" rows="6"></textarea>
+              </label>
+              <label class="field">
+                <span>30 habilidades</span>
+                <textarea id="skills-input" name="skills" rows="6"></textarea>
+              </label>
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="primary">Avaliar vaga</button>
+              <button type="button" id="save-settings" class="secondary">Salvar configurações</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel results-panel">
+          <div id="status-message" class="status" role="alert">Pronto para avaliar uma vaga.</div>
+          <div id="loading" class="loading hidden" aria-hidden="true">
+            <div class="spinner"></div>
+            <span>Processando análise…</span>
+          </div>
+
+          <div id="results" class="results hidden">
+            <div class="result-card main-card">
+              <div class="result-header">
+                <h3>Avaliação geral</h3>
+                <span id="decision-badge" class="badge">Fit</span>
+              </div>
+              <p class="score"><span id="fit-score">0</span>/100</p>
+              <div class="pros-cons-grid">
+                <div>
+                  <h4>Pros</h4>
+                  <ul id="pros-list"></ul>
+                </div>
+                <div>
+                  <h4>Cons</h4>
+                  <ul id="cons-list"></ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-header">
+                <h3>Habilidades recomendadas</h3>
+              </div>
+              <div id="skills-tags" class="tags"></div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-header">
+                <h3>Pitch personalizado</h3>
+                <button id="copy-pitch" class="secondary small">Copiar</button>
+              </div>
+              <p id="pitch-text" class="pitch-text"></p>
+              <div class="meta-row">
+                <span id="pitch-stats"></span>
+                <a id="apply-link" class="apply-link" href="#" target="_blank" rel="noreferrer">Candidatar-se</a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

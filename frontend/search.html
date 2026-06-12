@@ -33,12 +33,17 @@
           </label>
           <div class="actions">
             <button type="submit">Buscar vagas</button>
-            <button type="button" id="loop-button" class="secondary">Iniciar loop</button>
           </div>
         </form>
 
         <div id="status-message" class="status-message">Informe um termo e busque vagas para iniciar.</div>
         <div id="results" class="results-list"></div>
+
+        <nav class="pagination" aria-label="Paginação de vagas">
+          <button id="prev-page" type="button" class="secondary" disabled>Anterior</button>
+          <span id="page-info">Página 1</span>
+          <button id="next-page" type="button" class="secondary">Próxima</button>
+        </nav>
       </section>
     </main>
   </body>

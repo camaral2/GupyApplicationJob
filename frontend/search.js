@@ -1,6 +1,7 @@
 const state = {
   jobs: [],
   term: "product owner",
+  page: 1,
   processed: new Set(JSON.parse(localStorage.getItem("gupyProcessedJobs") || "[]")),
 };
 
@@ -9,7 +10,9 @@ const termInput = document.getElementById("term-input");
 const workplaceInput = document.getElementById("workplace-input");
 const results = document.getElementById("results");
 const statusMessage = document.getElementById("status-message");
-const loopButton = document.getElementById("loop-button");
+const prevPageButton = document.getElementById("prev-page");
+const nextPageButton = document.getElementById("next-page");
+const pageInfo = document.getElementById("page-info");
 
 function setStatus(message, isError = false) {
   statusMessage.textContent = message;
@@ -50,6 +53,11 @@ function renderJobs() {
     .join("");
 }
 
+function updatePaginationControls() {
+  pageInfo.textContent = `Página ${state.page}`;
+  prevPageButton.disabled = state.page <= 1;
+}
+
 async function searchJobs(page = 1) {
   const term = termInput.value.trim() || "product owner";
   const workplaceTypes = workplaceInput.value || "remote";
@@ -69,7 +77,9 @@ async function searchJobs(page = 1) {
 
     state.jobs = payload.jobs || [];
     state.term = term;
+    state.page = page;
     renderJobs();
+    updatePaginationControls();
     setStatus(`Encontradas ${state.jobs.length} vagas para “${term}”.`);
   } catch (error) {
     console.error(error);
@@ -99,37 +109,19 @@ async function evaluateJob(jobUrl) {
   setStatus("Abrindo o avaliador para a vaga...");
 }
 
-async function runEvaluationLoop() {
-  const pendingJobs = state.jobs.filter((job) => !state.processed.has(job.url));
-
-  if (!pendingJobs.length) {
-    setStatus("Todas as vagas da lista já foram avaliadas.");
-    return;
-  }
-
-  for (const job of pendingJobs) {
-    const shouldEvaluate = window.confirm(`Deseja avaliar a vaga “${job.title}”?`);
-    if (!shouldEvaluate) {
-      continue;
-    }
-
-    setStatus(`Abrindo avaliador para “${job.title}”...`);
-    try {
-      await evaluateJob(job.url);
-    } catch (error) {
-      setStatus(error.message, true);
-      break;
-    }
-  }
-}
-
 searchForm.addEventListener("submit", (event) => {
   event.preventDefault();
   searchJobs(1);
 });
 
-loopButton.addEventListener("click", () => {
-  runEvaluationLoop();
+prevPageButton.addEventListener("click", () => {
+  if (state.page > 1) {
+    searchJobs(state.page - 1);
+  }
+});
+
+nextPageButton.addEventListener("click", () => {
+  searchJobs(state.page + 1);
 });
 
 results.addEventListener("click", async (event) => {

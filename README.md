@@ -40,4 +40,8 @@ Acesse:
 
 ## Variáveis de ambiente
 
-Crie um arquivo `.env` com as configurações necessárias, como chave da OpenAI e caminho do currículo padrão.
+Copie o arquivo `.env.example` para `.env` e preencha os valores locais, como chave da OpenAI e caminho do currículo padrão.
+
+```bash
+cp .env.example .env
+```

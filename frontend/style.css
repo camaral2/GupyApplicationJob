@@ -68,7 +68,10 @@ button.small { padding: 8px 12px; font-size: 0.9rem; }
 .search-form { display: grid; grid-template-columns: 2fr 1fr auto; gap: 12px; margin-bottom: 16px; }
 .search-form .field { gap: 6px; }
 .search-form input, .search-form select { width: 100%; }
-.results-list { display: grid; gap: 12px; margin-top: 16px; }
+..results-list { display: grid; gap: 12px; margin-top: 16px; }
+.pagination { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+.pagination button { min-width: 100px; }
+.pagination span { color: var(--text); font-weight: 600; }
 .job-card { padding: 16px; border-radius: 18px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); }
 .job-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
 .job-card-header h3 { margin: 0 0 4px; font-size: 1.05rem; }

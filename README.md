@@ -1,26 +1,26 @@
-# Inscrição Gupy
+# Gupy Application
 
-Aplicação local para avaliar vagas do Gupy, comparar com um currículo e gerar um pitch de candidatura.
+A local application designed to evaluate Gupy job postings, compare them against a resume, and generate an application pitch.
 
-## Funcionalidades
+## Features
 
-- Avaliação de vagas a partir de URL
-- Extração de dados de currículo em PDF/TXT
-- Geração de pitch e sugestão de habilidades
-- Busca de vagas no Gupy com fluxo de avaliação em lote
+* Job evaluation from a URL
+* Resume data extraction from PDF/TXT files
+* Generation of application pitches and skill suggestions
+* Gupy job search with a batch evaluation workflow
 
-## Estrutura
+## Project Structure
 
-- `backend/`: API FastAPI, scraper e avaliador
-- `frontend/`: interface web estática
-- `tests/`: testes automatizados
+* `backend/`: FastAPI API, scraper, and evaluation engine
+* `frontend/`: Static web interface
+* `tests/`: Automated tests
 
-## Requisitos
+## Requirements
 
-- Python 3.11+
-- Dependências do arquivo `backend/requirements.txt`
+* Python 3.11+
+* Dependencies listed in `backend/requirements.txt`
 
-## Instalação
+## Installation
 
 ```bash
 python -m venv .venv
@@ -28,19 +28,20 @@ source .venv/bin/activate
 pip install -r backend/requirements.txt
 ```
 
-## Execução
+## Running the Application
 
 ```bash
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Acesse:
-- http://127.0.0.1:8000/
-- http://127.0.0.1:8000/search
+Access:
 
-## Variáveis de ambiente
+* [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+* [http://127.0.0.1:8000/search](http://127.0.0.1:8000/search)
 
-Copie o arquivo `.env.example` para `.env` e preencha os valores locais, como chave da OpenAI e caminho do currículo padrão.
+## Environment Variables
+
+Copy the `.env.example` file to `.env` and fill in the local values, such as your OpenAI API key and the default resume path.
 
 ```bash
 cp .env.example .env

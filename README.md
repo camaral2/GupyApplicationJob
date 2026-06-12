@@ -2,6 +2,8 @@
 
 A local application designed to evaluate Gupy job postings, compare them against a resume, and generate an application pitch.
 
+![Flow](flow.png)
+
 ## Features
 
 * Job evaluation from a URL

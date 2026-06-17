@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import warnings
 from typing import Any
 
 import httpx
@@ -14,6 +15,13 @@ from .config import DATA_DIR, FRONTEND_DIR, settings
 from .evaluator import evaluate_job, extract_resume_text, load_json_list
 from .scraper import build_gupy_search_url, parse_gupy_page, parse_gupy_search_results
 from .user_store import UserStore
+
+# Suprime warning conhecido do pypdf/cryptography (não afeta execução).
+warnings.filterwarnings(
+    "ignore",
+    message=".*ARC4 has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.ARC4.*",
+    category=Warning,
+)
 
 def _fetch_gupy_search_page(search_url: str) -> str:
     # Em Vercel, evitar Playwright para não disparar erros internos de subprocesso.

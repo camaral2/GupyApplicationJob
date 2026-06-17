@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Any
 
 from bs4 import BeautifulSoup
-from pypdf import PdfReader
 
 from .config import DATA_DIR, settings
 
@@ -30,6 +29,8 @@ def load_json_list(path: Path) -> list[str]:
 
 def extract_resume_text(file_bytes: bytes | None = None, file_path: str | None = None, filename: str | None = None) -> str:
     if file_bytes and filename and filename.lower().endswith(".pdf"):
+        from pypdf import PdfReader
+
         reader = PdfReader(io.BytesIO(file_bytes))
         pages = [page.extract_text() or "" for page in reader.pages]
         return "\n".join(pages).strip()
@@ -40,6 +41,8 @@ def extract_resume_text(file_bytes: bytes | None = None, file_path: str | None =
     if file_path and Path(file_path).exists():
         path = Path(file_path)
         if path.suffix.lower() == ".pdf":
+            from pypdf import PdfReader
+
             reader = PdfReader(str(path))
             pages = [page.extract_text() or "" for page in reader.pages]
             return "\n".join(pages).strip()

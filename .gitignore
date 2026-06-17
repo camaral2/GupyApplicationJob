@@ -13,3 +13,6 @@ coverage/
 *.sqlite3
 backend/.pytest_cache/
 frontend/.pytest_cache/
+.vercel
+backend/data/auth/
+backend/data/users/

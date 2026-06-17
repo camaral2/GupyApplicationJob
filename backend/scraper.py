@@ -167,11 +167,23 @@ def _extract_job_title_and_company(aria_label: str) -> tuple[str, str]:
     return aria_label, ""
 
 
+def _normalize_workplace_types(workplace_types: str | None) -> list[str]:
+    raw = str(workplace_types or "remote").strip().lower()
+    if not raw:
+        raw = "remote"
+
+    values = [item.strip() for item in re.split(r"[,\s]+", raw) if item.strip()]
+    allowed = {"remote", "hybrid", "on-site"}
+    normalized = [item for item in values if item in allowed]
+    return normalized or ["remote"]
+
+
 def build_gupy_search_url(term: str, page: int = 1, workplace_types: str | None = None) -> str:
     normalized_term = " ".join(str(term or "product owner").split()).strip() or "product owner"
     encoded_term = quote(normalized_term)
     page_number = max(1, int(page or 1))
-    base_url = f"https://portal.gupy.io/job-search/term={encoded_term}&workplaceTypes[]=remote"
+    workplace_params = "&".join(f"workplaceTypes[]={quote(value)}" for value in _normalize_workplace_types(workplace_types))
+    base_url = f"https://portal.gupy.io/job-search/term={encoded_term}&{workplace_params}"
     if page_number > 1:
         return f"{base_url}?page={page_number}"
     return base_url

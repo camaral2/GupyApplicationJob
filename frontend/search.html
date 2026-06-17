@@ -5,17 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pesquisar vagas Gupy</title>
     <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/auth.js" defer></script>
     <script src="/static/search.js" defer></script>
   </head>
   <body>
     <main class="app-shell search-shell">
       <section class="panel">
+        <div class="topbar">
+          <a class="ghost-link" href="/evaluate">Ir para o avaliador</a>
+          <div class="auth-chip">
+            <span id="auth-email"></span>
+            <button id="logout-button" class="secondary small" type="button">Sair</button>
+          </div>
+        </div>
         <div class="panel-header">
           <div>
             <p class="eyebrow">Rotina de pesquisa</p>
             <h1>Pesquisar vagas no Gupy</h1>
           </div>
-          <a class="ghost-link" href="/">Voltar ao avaliador</a>
         </div>
 
         <form id="search-form" class="search-form">

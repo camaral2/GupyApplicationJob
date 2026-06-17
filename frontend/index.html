@@ -5,9 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gupy Job Evaluator</title>
     <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/auth.js" defer></script>
+    <script src="/static/app.js" defer></script>
   </head>
   <body>
     <div class="app-shell">
+      <div class="topbar">
+        <a class="ghost-link" href="/search">Pesquisar vagas</a>
+        <div class="auth-chip">
+          <span id="auth-email"></span>
+          <button id="logout-button" class="secondary small" type="button">Sair</button>
+        </div>
+      </div>
       <header class="hero">
         <div>
           <p class="eyebrow">Avaliação de vagas · Pitch automático</p>
@@ -104,7 +113,5 @@
         </section>
       </main>
     </div>
-
-    <script src="/static/app.js"></script>
   </body>
 </html>

@@ -1,11 +1,18 @@
+import os
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 BACKEND_DIR = Path(__file__).resolve().parent
-DATA_DIR = BACKEND_DIR / "data"
 FRONTEND_DIR = BASE_DIR / "frontend"
+
+if os.getenv("VERCEL") == "1":
+    DATA_DIR = Path("/tmp/gupy-data")
+else:
+    DATA_DIR = BACKEND_DIR / "data"
+
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class Settings(BaseSettings):

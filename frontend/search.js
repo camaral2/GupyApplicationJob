@@ -2,7 +2,7 @@ const state = {
   jobs: [],
   term: "product owner",
   page: 1,
-  processed: new Set(JSON.parse(localStorage.getItem("gupyProcessedJobs") || "[]")),
+  processed: new Set(),
 };
 
 const searchForm = document.getElementById("search-form");
@@ -19,8 +19,13 @@ function setStatus(message, isError = false) {
   statusMessage.classList.toggle("error", isError);
 }
 
-function persistProcessedJobs() {
-  localStorage.setItem("gupyProcessedJobs", JSON.stringify([...state.processed]));
+async function loadProcessedJobs() {
+  const response = await authFetch("/api/validated-jobs");
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.detail || "Não foi possível carregar vagas validadas.");
+  }
+  state.processed = new Set(payload.validated_jobs || []);
 }
 
 function renderJobs() {
@@ -43,14 +48,32 @@ function renderJobs() {
           </div>
           <div class="job-card-actions">
             <a class="ghost-link" href="${job.url}" target="_blank" rel="noreferrer">Abrir vaga</a>
-            <button class="evaluate-button" data-job-url="${job.url}" ${alreadyProcessed ? "disabled" : ""}>
+            <button class="evaluate-button" data-action="evaluate" data-job-url="${job.url}" ${alreadyProcessed ? "disabled" : ""}>
               ${alreadyProcessed ? "Já avaliada" : "Avaliar"}
+            </button>
+            <button class="secondary small" data-action="toggle-validated" data-job-url="${job.url}">
+              ${alreadyProcessed ? "Desmarcar" : "Marcar validada"}
             </button>
           </div>
         </article>
       `;
     })
     .join("");
+}
+
+async function setValidated(jobUrl, validated) {
+  const method = validated ? "POST" : "DELETE";
+  const response = await authFetch("/api/validated-jobs", {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ job_url: jobUrl }),
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.detail || "Não foi possível atualizar validação da vaga.");
+  }
+  state.processed = new Set(payload.validated_jobs || []);
+  renderJobs();
 }
 
 function updatePaginationControls() {
@@ -61,10 +84,12 @@ function updatePaginationControls() {
 async function searchJobs(page = 1) {
   const term = termInput.value.trim() || "product owner";
   const workplaceTypes = workplaceInput.value || "remote";
+  state.page = page;
+  updatePaginationControls();
   setStatus(`Buscando vagas para “${term}”...`);
 
   try {
-    const response = await fetch("/api/search-jobs", {
+    const response = await authFetch("/api/search-jobs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ term, workplace_types: workplaceTypes, page }),
@@ -89,11 +114,12 @@ async function searchJobs(page = 1) {
 
 function openEvaluator(jobUrl) {
   state.processed.add(jobUrl);
-  persistProcessedJobs();
   renderJobs();
 
+  setValidated(jobUrl, true).catch((error) => console.error(error));
+
   sessionStorage.setItem("prefillJobUrl", jobUrl);
-  const redirectUrl = `/?url=${encodeURIComponent(jobUrl)}`;
+  const redirectUrl = `/evaluate?url=${encodeURIComponent(jobUrl)}`;
   const targetWindow = window.open(redirectUrl, "_blank", "noopener,noreferrer");
 
   if (!targetWindow) {
@@ -125,7 +151,7 @@ nextPageButton.addEventListener("click", () => {
 });
 
 results.addEventListener("click", async (event) => {
-  const button = event.target.closest("[data-job-url]");
+  const button = event.target.closest("[data-action][data-job-url]");
   if (!button) {
     return;
   }
@@ -135,12 +161,37 @@ results.addEventListener("click", async (event) => {
     return;
   }
 
-  setStatus("Abrindo o avaliador para esta vaga...");
-  try {
-    await evaluateJob(jobUrl);
-  } catch (error) {
-    setStatus(error.message, true);
+  const action = button.getAttribute("data-action");
+  if (action === "evaluate") {
+    setStatus("Abrindo o avaliador para esta vaga...");
+    try {
+      await evaluateJob(jobUrl);
+    } catch (error) {
+      setStatus(error.message, true);
+    }
+    return;
+  }
+
+  if (action === "toggle-validated") {
+    const isValidated = state.processed.has(jobUrl);
+    try {
+      await setValidated(jobUrl, !isValidated);
+      setStatus(!isValidated ? "Vaga marcada como validada." : "Vaga desmarcada.");
+    } catch (error) {
+      setStatus(error.message, true);
+    }
   }
 });
 
-searchJobs(1);
+window.addEventListener("DOMContentLoaded", async () => {
+  if (!ensureAuthenticated()) {
+    return;
+  }
+  mountAuthHeader();
+  try {
+    await loadProcessedJobs();
+  } catch (error) {
+    setStatus(error.message, true);
+  }
+  searchJobs(1);
+});

@@ -33,10 +33,16 @@ function prefillUrlFromQuery() {
 
 async function loadSettings() {
   try {
-    const response = await fetch('/api/settings');
+    const response = await authFetch('/api/settings');
     const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || 'Falha ao buscar configurações.');
+    }
     skillsInput.value = (data.skills || []).join('\n');
     exclusionsInput.value = (data.exclusions || []).join('\n');
+    if (data.resume_text && !resumeText.value.trim()) {
+      resumeText.value = data.resume_text;
+    }
   } catch (error) {
     statusMessage.textContent = 'Não foi possível carregar as configurações salvas.';
   }
@@ -105,7 +111,7 @@ form.addEventListener('submit', async (event) => {
   showLoading('Analisando a vaga e o currículo…');
 
   try {
-    const response = await fetch('/api/evaluate', {
+    const response = await authFetch('/api/evaluate', {
       method: 'POST',
       body: payload,
     });
@@ -114,6 +120,11 @@ form.addEventListener('submit', async (event) => {
       throw new Error(data.detail || 'Erro ao avaliar a vaga');
     }
     renderResults(data);
+    await authFetch('/api/validated-jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ job_url: urlInput.value }),
+    });
     statusMessage.textContent = 'Análise concluída com sucesso.';
   } catch (error) {
     setStatus(error.message || 'Falha inesperada na análise.', true);
@@ -125,12 +136,14 @@ form.addEventListener('submit', async (event) => {
 
 saveSettings.addEventListener('click', async () => {
   try {
-    const response = await fetch('/api/settings', {
+    const response = await authFetch('/api/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         skills: skillsInput.value.split('\n').map((item) => item.trim()).filter(Boolean),
         exclusions: exclusionsInput.value.split('\n').map((item) => item.trim()).filter(Boolean),
+        resume_text: resumeText.value || '',
+        resume_file_name: resumeInput.files[0]?.name || '',
       }),
     });
     const data = await response.json();
@@ -187,6 +200,10 @@ resumeInput.addEventListener('change', () => {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
+  if (!ensureAuthenticated()) {
+    return;
+  }
+  mountAuthHeader();
   prefillUrlFromQuery();
   loadSettings();
 });

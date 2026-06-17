@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrar | Gupy Job Evaluator</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/auth.js" defer></script>
+    <script src="/static/login.js" defer></script>
+  </head>
+  <body>
+    <main class="app-shell auth-shell">
+      <section class="panel auth-panel">
+        <p class="eyebrow">Acesso</p>
+        <h1>Entrar ou criar conta</h1>
+        <p class="hero-copy">Use email e senha para manter suas configurações e vagas avaliadas separadas por usuário.</p>
+
+        <div id="auth-status" class="status">Informe seus dados para continuar.</div>
+
+        <form id="login-form" class="stack">
+          <label class="field">
+            <span>Email</span>
+            <input id="email-input" type="email" required placeholder="voce@email.com" />
+          </label>
+          <label class="field">
+            <span>Senha</span>
+            <input id="password-input" type="password" required minlength="6" placeholder="Mínimo de 6 caracteres" />
+          </label>
+          <div class="actions">
+            <button type="submit" class="primary">Entrar</button>
+            <button type="button" id="register-button" class="secondary">Criar conta</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

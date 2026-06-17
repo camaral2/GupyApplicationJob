@@ -1,4 +1,5 @@
 import os
+import tempfile
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -7,10 +8,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 BACKEND_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 
-if os.getenv("VERCEL") == "1":
-    DATA_DIR = Path("/tmp/gupy-data")
-else:
-    DATA_DIR = BACKEND_DIR / "data"
+def _resolve_data_dir() -> Path:
+    custom_data_dir = os.getenv("DATA_DIR")
+    if custom_data_dir:
+        return Path(custom_data_dir)
+
+    # Ambientes serverless normalmente possuem código em filesystem somente leitura.
+    if os.getenv("VERCEL") == "1" or os.getenv("VERCEL_ENV"):
+        return Path(tempfile.gettempdir()) / "gupy-data"
+
+    local_dir = BACKEND_DIR / "data"
+    try:
+        local_dir.mkdir(parents=True, exist_ok=True)
+        probe = local_dir / ".write_test"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink(missing_ok=True)
+        return local_dir
+    except Exception:
+        return Path(tempfile.gettempdir()) / "gupy-data"
+
+
+DATA_DIR = _resolve_data_dir()
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 

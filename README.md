@@ -48,3 +48,9 @@ Copy the `.env.example` file to `.env` and fill in the local values, such as you
 ```bash
 cp .env.example .env
 ```
+
+For authentication and user data persistence, configure a PostgreSQL connection string (Supabase), for example:
+
+```bash
+DATABASE_URL=postgresql://postgres:your_password@db.your-project-ref.supabase.co:5432/postgres?sslmode=require
+```

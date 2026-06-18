@@ -10,11 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from .auth import AuthStore
 from .config import DATA_DIR, FRONTEND_DIR, settings
+from .db_store import DatabaseStore
 from .evaluator import evaluate_job, extract_resume_text, load_json_list
 from .scraper import build_gupy_search_url, parse_gupy_page, parse_gupy_search_results
-from .user_store import UserStore
 
 # Suprime warning conhecido do pypdf/cryptography (não afeta execução).
 warnings.filterwarnings(
@@ -69,8 +68,10 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
-auth_store = AuthStore(DATA_DIR)
-user_store = UserStore(DATA_DIR)
+if not settings.database_url:
+    raise RuntimeError("DATABASE_URL não configurada. Configure a conexão PostgreSQL (Supabase).")
+db_store = DatabaseStore(settings.database_url)
+db_store.init_schema()
 
 
 def _require_user(request: Request) -> str:
@@ -80,7 +81,7 @@ def _require_user(request: Request) -> str:
     token = authorization.replace("Bearer ", "", 1).strip()
     if not token:
         raise HTTPException(status_code=401, detail="Sessão inválida.")
-    email = auth_store.get_email_by_token(token)
+    email = db_store.get_email_by_token(token)
     if not email:
         raise HTTPException(status_code=401, detail="Sessão expirada ou inválida.")
     return email
@@ -115,9 +116,7 @@ def register(payload: dict[str, Any]) -> dict[str, Any]:
     if len(password) < 6:
         raise HTTPException(status_code=400, detail="A senha deve ter pelo menos 6 caracteres.")
     try:
-        profile = auth_store.register_user(email, password)
-        # Cria estrutura padrão do usuário no primeiro cadastro.
-        user_store.save_user_data(email, {})
+        profile = db_store.register_user(email, password)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return profile
@@ -128,7 +127,7 @@ def login(payload: dict[str, Any]) -> dict[str, Any]:
     email = str(payload.get("email") or "").strip().lower()
     password = str(payload.get("password") or "")
     try:
-        return auth_store.login_user(email, password)
+        return db_store.login_user(email, password)
     except ValueError as exc:
         raise HTTPException(status_code=401, detail=str(exc)) from exc
 
@@ -145,14 +144,14 @@ def logout(request: Request) -> dict[str, str]:
     if authorization.startswith("Bearer "):
         token = authorization.replace("Bearer ", "", 1).strip()
         if token:
-            auth_store.revoke_token(token)
+            db_store.revoke_token(token)
     return {"status": "ok"}
 
 
 @app.get("/api/settings")
 def get_settings(request: Request) -> dict[str, Any]:
     email = _require_user(request)
-    user_data = user_store.load_user_data(email)
+    user_data = db_store.load_user_data(email)
     default_skills = load_json_list(DATA_DIR / "habilidades.json")
     default_exclusions = load_json_list(DATA_DIR / "excludentes.json")
     return {
@@ -172,7 +171,7 @@ def save_settings(payload: dict[str, Any], request: Request) -> dict[str, Any]:
     resume_text = str(payload.get("resume_text") or "")
     resume_file_name = str(payload.get("resume_file_name") or "")
 
-    data = user_store.save_user_data(
+    data = db_store.save_user_data(
         email,
         {
             "skills": skills,
@@ -187,7 +186,7 @@ def save_settings(payload: dict[str, Any], request: Request) -> dict[str, Any]:
 @app.get("/api/validated-jobs")
 def get_validated_jobs(request: Request) -> dict[str, list[str]]:
     email = _require_user(request)
-    data = user_store.load_user_data(email)
+    data = db_store.load_user_data(email)
     return {"validated_jobs": data.get("validated_jobs") or []}
 
 
@@ -197,7 +196,7 @@ def add_validated_job(payload: dict[str, Any], request: Request) -> dict[str, li
     job_url = str(payload.get("job_url") or "").strip()
     if not job_url:
         raise HTTPException(status_code=400, detail="job_url é obrigatório.")
-    data = user_store.add_validated_job(email, job_url)
+    data = db_store.add_validated_job(email, job_url)
     return {"validated_jobs": data.get("validated_jobs") or []}
 
 
@@ -207,7 +206,7 @@ def remove_validated_job(payload: dict[str, Any], request: Request) -> dict[str,
     job_url = str(payload.get("job_url") or "").strip()
     if not job_url:
         raise HTTPException(status_code=400, detail="job_url é obrigatório.")
-    data = user_store.remove_validated_job(email, job_url)
+    data = db_store.remove_validated_job(email, job_url)
     return {"validated_jobs": data.get("validated_jobs") or []}
 
 
@@ -221,6 +220,11 @@ async def search_jobs(payload: dict[str, Any], request: Request) -> dict[str, An
 
     try:
         html = await asyncio.to_thread(_fetch_gupy_search_page, search_url)
+    
+        print(f"Fetched search results for '{term}' (page {page}, workplace: {workplace_types})")
+        print(f"Search URL: {search_url}")
+        print(f"HTML content length: {len(html)} characters")
+        
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Unable to search vacancies: {exc}") from exc
 
@@ -256,7 +260,7 @@ async def evaluate(
     if not job_data.get("title") and not job_data.get("description"):
         raise HTTPException(status_code=400, detail="The page could not be parsed as a Gupy vacancy")
     
-    user_data = user_store.load_user_data(email)
+    user_data = db_store.load_user_data(email)
     default_skills = load_json_list(DATA_DIR / "habilidades.json")
     default_exclusions = load_json_list(DATA_DIR / "excludentes.json")
 
@@ -294,7 +298,7 @@ async def evaluate(
 
     # Mantém o currículo em cache por usuário para próximas análises.
     if extracted_text:
-        user_store.save_user_data(
+        db_store.save_user_data(
             email,
             {
                 "resume_text": extracted_text,
